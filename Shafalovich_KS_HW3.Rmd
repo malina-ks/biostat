@@ -1,0 +1,188 @@
+---
+title: "Shafalovich_K_S"
+format: html
+editor: visual
+---
+
+```{r}
+#Домашнее задание 3
+#Тема: расчет описательных статистик.
+
+#Цель: научиться считать описательные статистики для количественной и категориальной переменных, строить доверительный интервал, а также графики плотности вероятности.
+
+#Описание ДЗ
+#В RStudio создайте RMarkdown-файл и загрузите датасет pima.
+```
+
+```{r}
+# Загрузка библиотеки для работы с данными
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+```
+
+```{r}
+pima <- read_excel("C:\\Users\\Asus\\Downloads\\bioinfo\\HW3\\pima.xlsx")
+head(pima)
+```
+
+```{r}
+# удаление пропусков 
+pima <- na.omit(pima)
+```
+
+```{r}
+# В первых двух заданиях вам необходимо посчитать описательные статистики. Для количественной переменной рассчитайте число наблюдений, среднее, стандартное отклонение, 1-й и 3-й квартили, минимум и максимум. Для категориальной переменной определите абсолютную и относительные частоты.
+```
+
+```{r}
+#Рассчитайте описательные статистики для переменных glucose, pressure, mass.
+```
+
+```{r}
+descr_glucose <- pima %>%
+  summarize(N = n(),
+            mean = mean(glucose),
+            sd = sd(glucose),
+            'Q1, Q3' = paste(quantile(glucose, probs = 0.25),
+                             ", ",
+                             quantile(glucose, probs = 0.75)),
+            Min = min(glucose),
+            Max = max(glucose))
+descr_glucose
+```
+
+```{r}
+descr_pressure <- pima %>%
+  summarise(N = n(),
+            mean = mean(pressure),
+            sd = sd(pressure),
+            'Q1, Q3' = paste(quantile(pressure, probs = 0.25),
+                             ", ",
+                             quantile(pressure, probs = 0.75)),
+            Min = min(pressure),
+            Max = max(pressure))
+descr_pressure
+```
+
+```{r}
+descr_mass <- pima %>%
+  summarise(N = n(),
+            mean = mean(mass),
+            sd = sd(mass),
+            "Q1, Q3" = paste(quantile(mass, probs = 0.25),
+                             ", ",
+                             quantile(mass, probs = 0.75)),
+            Min = min(mass),
+            Max = max(mass))
+descr_mass
+```
+
+```{r}
+# Для подсчета описательных статистик удобно воспользоваться функцией summarise() пакета dpyr.
+# summary(pima$glucose)
+# summary(pima$pressure)
+# summary(pima$mass)
+```
+
+```{r}
+# Рассчитайте описательную статистику для переменной diabetes. Создайте на основе переменной age новую переменную age_group, которая будет отражать следующие возрастные группы: 21–35, 36–49 и 50+. Посчитайте описательную статистику для новой переменной. 
+```
+
+```{r}
+dscr_diabetes <- pima %>%
+                    group_by(diabetes) %>%
+                    summarise(abs = n(),
+                    percent = n() / nrow(pima) * 100)
+dscr_diabetes
+```
+
+```{r}
+# Создайте на основе переменной age новую переменную age_group, которая будет отражать следующие возрастные группы: 21–35, 36–49 и 50+.
+pima$age_group <- ifelse(pima$age >= 21 & pima$age <= 35, '21–35',
+                         ifelse(pima$age >= 36 & pima$age <= 49, '36–49', '50+'))
+
+head(select(pima, age, age_group))
+```
+
+```{r}
+# Посчитайте описательную статистику для новой переменной. 
+dscr_age <- pima %>%
+                    group_by(age_group) %>%
+                    summarise(abs = n(),
+                    percent = n() / nrow(pima) * 100)
+dscr_age
+```
+
+```{r}
+# Определите 90% доверительный интервал для переменной pedigree.
+
+# Cреднее значение переменной pedigree
+mean_pedigree <- mean(pima$pedigree)
+
+# Cтандартное отклонение переменной pedigree
+sd_pedigree <- sd(pima$pedigree)
+
+# Размер выборки
+n <- length(pima$pedigree)
+
+# Z-статистика 
+z <- qnorm(0.95)
+
+# Cтандартная ошибка
+se <- sd_pedigree / sqrt(n)
+
+# Доверительные границы
+ci_lower <- mean_pedigree - z * se
+ci_upper <- mean_pedigree + z * se
+
+cat("90% доверительный интервал для переменной pedigree:", ci_lower, "-", ci_upper)
+```
+
+```{r}
+# Постройте график плотности вероятности для переменной glucose и отметьте на нем среднее значение. 
+```
+
+```{r}
+density_plot <- density(pima$glucose, na.rm = TRUE)
+plot(density_plot, main = "График плотности вероятности для переменной glucose", xlab = "Уровень глюкозы")
+abline(v = mean(pima$glucose, na.rm = TRUE), col = "red")
+```
+
+```{r}
+# Для той же переменной постройте гистограмму.
+```
+
+```{r}
+hist(pima$glucose, main = "Гистограмма уровня глюкозы", xlab = "Уровень глюкозы", border = "black", col = "green", breaks = 30)
+abline(v = mean(pima$glucose, na.rm = TRUE), col = "red", lwd = 2)
+```
+
+```{r}
+#Постройте два ящика с усами для значений pos и neg соответственно переменной diabetes
+```
+
+```{r}
+pima$diabetes <- factor(pima$diabetes)
+boxplot(glucose ~ diabetes, data = pima, main = "Diabetes", xlab = "Наличие диабета", ylab = "Уровень глюкозы", col = c("green", "red"))
+
+```
+
+```{r}
+# Постройте на одном графике две диаграммы рассеяния для наличия или отсутствия диабета. По оси X представьте значения обхвата трицепса, а по оси Y — массу тела. Выполните окрашивание, заливку и группирование по переменной diabetes
+```
+
+```{r}
+# В данных есть нулевые значения, для этих колонок убираем их
+pima <- subset(pima, triceps != 0 & mass != 0)
+
+# Построение диаграммы
+# Для решения 5-го задания удобно воспользоваться функцией facet_grid() пакета ggplot2
+
+ggplot(pima, aes(x = triceps, y = mass, color = diabetes)) +
+  geom_point() + 
+  facet_grid(. ~ diabetes) + 
+  labs(x = "ОБХВАТ ТРИЦЕПСА", y = "МАССА ТЕЛА", title = "диаграмма рассеяния для наличия или отсутствия диабета") +
+  theme_minimal() 
+```
