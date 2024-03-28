@@ -30,6 +30,8 @@ head(pima)
 ```{r}
 # удаление пропусков 
 pima <- na.omit(pima)
+# преобразуем переменную diabetes
+pima$diabetes <- factor(pima$diabetes)
 ```
 
 ```{r}
@@ -116,28 +118,29 @@ dscr_age
 ```
 
 ```{r}
-# Определите 90% доверительный интервал для переменной pedigree.
-
-# Cреднее значение переменной pedigree
+# Вычисление среднего значения pedigree
 mean_pedigree <- mean(pima$pedigree)
 
-# Cтандартное отклонение переменной pedigree
-sd_pedigree <- sd(pima$pedigree)
+# Вычисление стандартной ошибки среднего
+se_pedigree <- sd(pima$pedigree) / sqrt(length(pima$pedigree))
 
-# Размер выборки
-n <- length(pima$pedigree)
+# Задание уровня доверия (alpha)
+alpha <- 0.10
 
-# Z-статистика 
-z <- qnorm(0.95)
+# Определение степеней свободы (df)
+df <- length(pima$pedigree) - 1
 
-# Cтандартная ошибка
-se <- sd_pedigree / sqrt(n)
+# Вычисление значения Z-критерия
+t <- qt(alpha / 2, df, lower.tail = FALSE)
 
-# Доверительные границы
-ci_lower <- mean_pedigree - z * se
-ci_upper <- mean_pedigree + z * se
+# Вычисление границ доверительного интервала
+CI_pedigree <- c(mean_pedigree - t * se_pedigree,
+                 mean_pedigree + t * se_pedigree)
 
-cat("90% доверительный интервал для переменной pedigree:", ci_lower, "-", ci_upper)
+# Вывод результатов
+print("90% Доверительный интервал для переменной pedigree:")
+print(paste("Нижняя граница:", round(CI_pedigree[1], 4)))
+print(paste("Верхняя граница:", round(CI_pedigree[2], 4)))
 ```
 
 ```{r}
@@ -155,7 +158,7 @@ abline(v = mean(pima$glucose, na.rm = TRUE), col = "red")
 ```
 
 ```{r}
-hist(pima$glucose, main = "Гистограмма уровня глюкозы", xlab = "Уровень глюкозы", border = "black", col = "green", breaks = 30)
+hist(pima$glucose, main = "Гистограмма уровня глюкозы", xlab = "Уровень глюкозы", border = "black", col = "cadetblue", breaks = 100)
 abline(v = mean(pima$glucose, na.rm = TRUE), col = "red", lwd = 2)
 ```
 
@@ -164,7 +167,7 @@ abline(v = mean(pima$glucose, na.rm = TRUE), col = "red", lwd = 2)
 ```
 
 ```{r}
-pima$diabetes <- factor(pima$diabetes)
+
 boxplot(glucose ~ diabetes, data = pima, main = "Diabetes", xlab = "Наличие диабета", ylab = "Уровень глюкозы", col = c("green", "red"))
 
 ```
